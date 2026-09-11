@@ -145,6 +145,7 @@
   .pill.neutral{color:var(--silver);}
 
   .empty-state{padding:40px 20px;text-align:center;color:var(--muted);font-size:13.5px;}
+  .truncate{max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:help;}
 
   /* modal form */
   .modal-backdrop{
@@ -272,7 +273,7 @@
         <button class="btn btn-primary" data-open-modal="oportunidades">+ Nueva oportunidad</button>
       </div>
       <div class="table-wrap"><table>
-        <thead><tr><th>Contacto</th><th>Empresa</th><th>Estado</th><th></th></tr></thead>
+        <thead><tr><th>Contacto</th><th>Empresa</th><th>Capa de interés</th><th>Plazo</th><th>Presupuesto</th><th>Descripción</th><th>Estado</th><th></th></tr></thead>
         <tbody id="oportunidades-tbody"></tbody>
       </table></div>
     </section>
@@ -357,6 +358,34 @@
     <div class="field"><label>Empresa</label><input name="empresa"></div>
     <div class="field"><label>Email</label><input name="email" type="email"></div>
     <div class="field"><label>Teléfono</label><input name="telefono"></div>
+    <div class="field"><label>Capa de interés</label>
+      <select name="capa_interes">
+        <option value="">—</option>
+        <option>Marca — identidad y diseño</option>
+        <option>Presencia — web o e-commerce</option>
+        <option>Automatización — sistemas y CRM</option>
+        <option>No estoy seguro todavía</option>
+      </select>
+    </div>
+    <div class="field"><label>Plazo estimado</label>
+      <select name="plazo_estimado">
+        <option value="">—</option>
+        <option>Lo antes posible</option>
+        <option>1 – 2 meses</option>
+        <option>3 – 6 meses</option>
+        <option>Sin apuro, estoy explorando</option>
+      </select>
+    </div>
+    <div class="field"><label>Presupuesto</label>
+      <select name="presupuesto">
+        <option value="">—</option>
+        <option>Acotado</option>
+        <option>Moderado</option>
+        <option>Robusto</option>
+        <option>Prefiero conversarlo en la consulta</option>
+      </select>
+    </div>
+    <div class="field"><label>Descripción del proyecto</label><textarea name="descripcion"></textarea></div>
     <div class="field"><label>Estado</label>
       <select name="estado">
         <option value="nuevo">Nuevo</option>
@@ -366,7 +395,7 @@
         <option value="perdida">Perdida</option>
       </select>
     </div>
-    <div class="field"><label>Notas</label><textarea name="notas"></textarea></div>
+    <div class="field"><label>Notas internas</label><textarea name="notas" placeholder="Observaciones tuyas, no visibles para el cliente"></textarea></div>
     <div class="modal-actions">
       <button type="button" class="btn" data-close-modal>Cancelar</button>
       <button type="submit" class="btn btn-primary">Guardar</button>
@@ -631,13 +660,17 @@
         <tr>
           <td>${esc(o.nombre_contacto)}</td>
           <td>${esc(o.empresa) || '—'}</td>
+          <td>${esc(o.capa_interes) || '—'}</td>
+          <td>${esc(o.plazo_estimado) || '—'}</td>
+          <td>${esc(o.presupuesto) || '—'}</td>
+          <td class="truncate" title="${esc(o.descripcion)}">${esc(o.descripcion) || '—'}</td>
           <td><span class="pill ${pillClass(o.estado)}">${o.estado}</span></td>
           <td class="row-actions">
             <button class="btn btn-sm" onclick='openModal("oportunidades", ${JSON.stringify(o).replace(/'/g,"&#39;")})'>Editar</button>
             <button class="btn btn-sm btn-danger" onclick="deleteRecord('oportunidades','${o.id}','${esc(o.nombre_contacto)}')">Eliminar</button>
           </td>
         </tr>`).join('')
-      : `<tr><td colspan="4" class="empty-state">Todavía no cargaste ninguna oportunidad.</td></tr>`;
+      : `<tr><td colspan="8" class="empty-state">Todavía no cargaste ninguna oportunidad.</td></tr>`;
   }
 
   checkSession();

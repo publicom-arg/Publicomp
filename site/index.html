@@ -860,17 +860,13 @@
     errorBox.style.display = 'none';
     submitBtn.textContent = 'Enviando...';
 
-    const notas = [
-      'Capa de interés: ' + document.getElementById('f-capa').value,
-      'Plazo estimado: ' + document.getElementById('f-plazo').value,
-      'Presupuesto: ' + document.getElementById('f-presupuesto').value,
-      'Descripción: ' + (document.getElementById('f-desc').value || '—')
-    ].join('\n');
-
     const { error } = await sbContact.from('oportunidades').insert({
       nombre_contacto: document.getElementById('f-nombre').value,
       email: document.getElementById('f-email').value,
-      notas: notas,
+      capa_interes: document.getElementById('f-capa').value,
+      plazo_estimado: document.getElementById('f-plazo').value,
+      presupuesto: document.getElementById('f-presupuesto').value,
+      descripcion: document.getElementById('f-desc').value || null,
       estado: 'nuevo'
     });
 
