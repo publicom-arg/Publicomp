@@ -8,6 +8,13 @@
 <meta name="theme-color" content="#07090C">
 <meta name="robots" content="noindex, nofollow">
 
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Panel Publicomp">
+
 <style>
   :root{
     --ink:#07090C;
@@ -66,8 +73,10 @@
     padding:24px;
     background:radial-gradient(ellipse 640px 420px at 82% 18%, rgba(229,9,20,.14), transparent 60%), var(--ink);
   }
+  .login-wrap{width:100%;max-width:380px;display:flex;flex-direction:column;align-items:center;}
+  .login-logo{height:64px;width:auto;margin-bottom:22px;}
   .login-card{
-    width:100%;max-width:380px;background:var(--graphite);
+    width:100%;background:var(--graphite);
     border:1px solid var(--line);padding:32px;
   }
   .login-card h1{font-size:22px;margin-bottom:4px;}
@@ -178,7 +187,9 @@
 
 <!-- LOGIN -->
 <div id="login-screen">
-  <div class="login-card">
+  <div class="login-wrap">
+    <img src="../assets/publicomp-icon.png" alt="Publicomp" class="login-logo">
+    <div class="login-card">
     <div class="eyebrow">Publicomp</div>
     <h1>Panel interno</h1>
     <div class="muted">Acceso restringido. Iniciá sesión con tu cuenta.</div>
@@ -194,6 +205,7 @@
       <button type="submit" class="btn btn-primary">Ingresar</button>
       <div id="login-error"></div>
     </form>
+    </div>
   </div>
 </div>
 
@@ -674,4 +686,10 @@
   }
 
   checkSession();
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    });
+  }
 </script>
