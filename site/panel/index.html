@@ -195,7 +195,16 @@
     width:100%;max-width:440px;background:var(--graphite);border:1px solid var(--line);
     padding:28px;max-height:90vh;overflow-y:auto;
   }
+  .modal.modal-lg{max-width:680px;}
   .modal h3{font-size:17px;margin-bottom:18px;}
+
+  /* relevamiento question groups */
+  .relevamiento-section{margin-top:22px;padding-top:18px;border-top:1px solid var(--line);}
+  .relevamiento-section h4{
+    font-family:var(--font-mono);font-size:11px;font-weight:600;
+    letter-spacing:.08em;text-transform:uppercase;color:var(--red);margin-bottom:14px;
+  }
+  .relevamiento-section .field label{color:var(--white);font-size:13px;text-transform:none;letter-spacing:0;font-family:var(--font-body);font-weight:500;}
   .modal .field select{
     width:100%;background:var(--ink);border:1px solid var(--line);color:var(--white);
     padding:11px 12px;font-size:14px;
@@ -289,6 +298,7 @@
         <li><a href="#proyectos" data-view="proyectos">Proyectos</a></li>
         <li><a href="#facturacion" data-view="facturacion">Facturación</a></li>
         <li><a href="#oportunidades" data-view="oportunidades">Oportunidades</a></li>
+        <li><a href="#relevamientos" data-view="relevamientos">Relevamientos</a></li>
       </ul>
     </nav>
   </aside>
@@ -350,6 +360,18 @@
       <div class="table-wrap"><table>
         <thead><tr><th>Contacto</th><th>Email</th><th>Teléfono</th><th>Empresa</th><th>Capa de interés</th><th>Plazo</th><th>Presupuesto</th><th>Descripción</th><th>Estado</th><th></th></tr></thead>
         <tbody id="oportunidades-tbody"></tbody>
+      </table></div>
+    </section>
+
+    <!-- RELEVAMIENTOS -->
+    <section id="view-relevamientos" class="view" hidden>
+      <div class="view-head">
+        <h2>Relevamientos</h2>
+        <button class="btn btn-primary" id="btn-nuevo-relevamiento">+ Nuevo relevamiento</button>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Proyecto</th><th>Tipo</th><th>Fecha</th><th></th></tr></thead>
+        <tbody id="relevamientos-tbody"></tbody>
       </table></div>
     </section>
   </main>
@@ -474,6 +496,34 @@
     <div class="modal-actions">
       <button type="button" class="btn" data-close-modal>Cancelar</button>
       <button type="submit" class="btn btn-primary">Guardar</button>
+    </div>
+  </form>
+</div>
+
+<div class="modal-backdrop" id="modal-relevamiento">
+  <form class="modal modal-lg" id="form-relevamiento">
+    <h3 id="relevamiento-modal-title">Nuevo relevamiento</h3>
+    <input type="hidden" name="id">
+    <div class="field">
+      <label>Proyecto *</label>
+      <select id="relevamiento-proyecto" required></select>
+    </div>
+    <div class="field">
+      <label>Tipo de proyecto *</label>
+      <select id="relevamiento-tipo" required>
+        <option value="">Elegí un tipo para cargar el cuestionario</option>
+        <option value="landing">Página web — Landing page</option>
+        <option value="institucional">Página web — Empresas e instituciones</option>
+        <option value="ecommerce">E-commerce</option>
+        <option value="pos">Sistema de ventas — POS</option>
+        <option value="crm">CRM</option>
+        <option value="erp">ERP</option>
+      </select>
+    </div>
+    <div id="relevamiento-preguntas"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn" data-close-modal>Cancelar</button>
+      <button type="submit" class="btn btn-primary">Guardar relevamiento</button>
     </div>
   </form>
 </div>
@@ -651,17 +701,19 @@
 
   // ---------- LOAD & RENDER ----------
   async function loadAll() {
-    const [clientesRes, proyectosRes, facturacionRes, oportunidadesRes] = await Promise.all([
+    const [clientesRes, proyectosRes, facturacionRes, oportunidadesRes, relevamientosRes] = await Promise.all([
       sb.from('clientes').select('*').order('nombre'),
       sb.from('proyectos').select('*, clientes(nombre)').order('created_at', { ascending: false }),
       sb.from('facturacion').select('*, proyectos(nombre)').order('fecha', { ascending: false }),
       sb.from('oportunidades').select('*').order('created_at', { ascending: false }),
+      sb.from('relevamientos').select('*, proyectos(nombre)').order('created_at', { ascending: false }),
     ]);
 
     clientesCache = clientesRes.data || [];
     proyectosCache = proyectosRes.data || [];
     const facturacion = facturacionRes.data || [];
     const oportunidades = oportunidadesRes.data || [];
+    const relevamientos = relevamientosRes.data || [];
 
     populateSelects();
     renderDashboard(clientesCache, proyectosCache, facturacion, oportunidades);
@@ -669,6 +721,7 @@
     renderProyectos(proyectosCache);
     renderFacturacion(facturacion);
     renderOportunidades(oportunidades);
+    renderRelevamientos(relevamientos);
   }
 
   function renderDashboard(clientes, proyectos, facturacion, oportunidades) {
@@ -765,6 +818,205 @@
         </tr>`).join('')
       : `<tr><td colspan="10" class="empty-state">Todavía no cargaste ninguna oportunidad.</td></tr>`;
   }
+
+  const TIPO_PROYECTO_LABELS = {
+    landing: 'Landing page',
+    institucional: 'Página institucional',
+    ecommerce: 'E-commerce',
+    pos: 'Sistema de ventas (POS)',
+    crm: 'CRM',
+    erp: 'ERP',
+  };
+
+  function renderRelevamientos(relevamientos) {
+    document.getElementById('relevamientos-tbody').innerHTML = relevamientos.length
+      ? relevamientos.map(r => `
+        <tr>
+          <td data-label="Proyecto">${esc(r.proyectos?.nombre) || '—'}</td>
+          <td data-label="Tipo">${esc(TIPO_PROYECTO_LABELS[r.tipo_proyecto] || r.tipo_proyecto)}</td>
+          <td data-label="Fecha">${new Date(r.created_at).toLocaleDateString('es-AR')}</td>
+          <td class="row-actions">
+            <button class="btn btn-sm" onclick='openRelevamientoModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>Ver / Editar</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteRecord('relevamientos','${r.id}','este relevamiento')">Eliminar</button>
+          </td>
+        </tr>`).join('')
+      : `<tr><td colspan="4" class="empty-state">Todavía no cargaste ningún relevamiento.</td></tr>`;
+  }
+
+  // ---------- RELEVAMIENTOS (dynamic questionnaire by project type) ----------
+  const RELEVAMIENTO_BASE = [
+    { section: 'Contexto del cliente', items: [
+      ['base_1', 'Nombre de la empresa / marca'],
+      ['base_2', 'Rubro o industria'],
+      ['base_3', 'Descripción breve del negocio (qué hacen, hace cuánto operan)'],
+      ['base_4', 'Nombre y rol de la persona de contacto / quién decide'],
+    ]},
+    { section: 'El problema a resolver', items: [
+      ['base_5', '¿Cuál es el objetivo principal de este proyecto?'],
+      ['base_6', '¿Qué tienen hoy resuelto y qué les falta?'],
+      ['base_7', '¿Qué pasa si este proyecto no se hace?'],
+    ]},
+    { section: 'Público y competencia', items: [
+      ['base_8', '¿Quién es el usuario/cliente final de esto?'],
+      ['base_9', 'Referencias que les gustan (sitios, apps, sistemas de otros)'],
+      ['base_10', 'Competencia directa a tener en cuenta'],
+    ]},
+    { section: 'Identidad de marca', items: [
+      ['base_11', '¿Tienen identidad de marca ya definida (logo, colores, tipografías)?'],
+      ['base_12', 'Material existente disponible (fotos, textos, videos, catálogos)'],
+    ]},
+    { section: 'Operativo', items: [
+      ['base_13', 'Plazo deseado / fecha límite si existe'],
+      ['base_14', 'Presupuesto de referencia (rango, no exacto)'],
+      ['base_15', '¿Quién va a administrar/actualizar esto después de entregado?'],
+    ]},
+  ];
+
+  const RELEVAMIENTO_TIPOS = {
+    landing: { section: 'Landing page', items: [
+      ['t_1', '¿Cuál es el único objetivo de conversión de esta página?'],
+      ['t_2', '¿Qué producto o servicio puntual promociona?'],
+      ['t_3', '¿Cuál es el llamado a la acción (CTA) principal?'],
+      ['t_4', '¿Necesita formulario? ¿Qué datos pide como mínimo?'],
+      ['t_5', '¿A dónde llegan los datos del formulario?'],
+      ['t_6', '¿Va a correr campañas pagas (Meta Ads, Google Ads)?'],
+      ['t_7', '¿Ya tienen copy/textos redactados o hay que escribirlos?'],
+      ['t_8', '¿Tienen imágenes o video propio, o se trabaja con stock/diseño?'],
+      ['t_9', '¿Idioma único o necesita más de uno?'],
+      ['t_10', '¿Es una landing permanente o para una campaña con fecha de vencimiento?'],
+    ]},
+    institucional: { section: 'Página institucional', items: [
+      ['t_1', 'Secciones necesarias (Inicio, Nosotros, Servicios, Equipo, Contacto, etc.)'],
+      ['t_2', 'Cantidad aproximada de páginas'],
+      ['t_3', '¿El contenido (textos) ya está escrito o hay que redactarlo?'],
+      ['t_4', '¿Necesita blog o sección de noticias? ¿Quién carga contenido después?'],
+      ['t_5', '¿Multilenguaje?'],
+      ['t_6', '¿Formulario de contacto? ¿A dónde llegan los mensajes?'],
+      ['t_7', '¿Hay que mostrar ubicación física / mapa?'],
+      ['t_8', '¿Tienen certificaciones, clientes o casos de éxito reales para mostrar?'],
+      ['t_9', '¿Integración con redes sociales?'],
+      ['t_10', 'Palabras clave / términos por los que quieren aparecer en buscadores (SEO)'],
+      ['t_11', '¿Tienen dominio y hosting actual? ¿Hay que migrar algo existente?'],
+      ['t_12', '¿Necesita panel de administración para que ellos mismos editen contenido?'],
+    ]},
+    ecommerce: { section: 'E-commerce', items: [
+      ['t_1', 'Catálogo: cantidad aproximada de productos, ¿tienen variantes?'],
+      ['t_2', '¿Quién carga los productos? ¿Ya tienen fotos y fichas técnicas?'],
+      ['t_3', 'Medios de pago a aceptar'],
+      ['t_4', 'Métodos de envío y zona de cobertura'],
+      ['t_5', '¿Necesitan facturación electrónica integrada (AFIP)?'],
+      ['t_6', 'Gestión de stock: ¿en tiempo real?, ¿un depósito o varios?'],
+      ['t_7', '¿Van a usar cupones, descuentos o promociones?'],
+      ['t_8', '¿Compra como invitado o solo con cuenta registrada?'],
+      ['t_9', 'Política de cambios y devoluciones'],
+      ['t_10', 'Volumen esperado de ventas/pedidos por mes'],
+      ['t_11', 'Integraciones necesarias (contabilidad, ERP, email marketing, CRM)'],
+      ['t_12', '¿Venden también en un local físico?'],
+    ]},
+    pos: { section: 'Sistema de ventas (POS)', items: [
+      ['t_1', '¿Uno o varios puntos de venta / locales?'],
+      ['t_2', 'Hardware existente (lector de código, impresora fiscal, cajón)'],
+      ['t_3', '¿Necesitan facturación electrónica (AFIP) integrada al POS?'],
+      ['t_4', 'Medios de pago a aceptar en el mostrador'],
+      ['t_5', 'Gestión de stock — ¿multi-sucursal con stock unificado?'],
+      ['t_6', 'Usuarios y permisos (cajero, supervisor, dueño)'],
+      ['t_7', 'Reportes que necesitan'],
+      ['t_8', '¿Tiene que funcionar sin conexión a internet en algún momento?'],
+      ['t_9', '¿Venden también online?'],
+      ['t_10', 'Control de caja: apertura, cierre, arqueo diario'],
+    ]},
+    crm: { section: 'CRM', items: [
+      ['t_1', 'Volumen aproximado de contactos/clientes que manejan hoy'],
+      ['t_2', '¿Cómo gestionan las ventas hoy?'],
+      ['t_3', 'Proceso de ventas actual: ¿qué etapas tiene?'],
+      ['t_4', '¿Cuántas personas del equipo van a usar el sistema?'],
+      ['t_5', 'Automatizaciones necesarias'],
+      ['t_6', 'Integraciones necesarias (WhatsApp Business, email, formularios)'],
+      ['t_7', 'Reportes/métricas clave que quieren ver'],
+      ['t_8', '¿Necesitan segmentar clientes? ¿Con qué criterios?'],
+      ['t_9', '¿Necesitan historial completo de interacciones por contacto?'],
+      ['t_10', '¿De dónde vienen los leads hoy?'],
+    ]},
+    erp: { section: 'ERP', items: [
+      ['t_1', 'Áreas a cubrir (ventas, compras, inventario, finanzas, RRHH, producción)'],
+      ['t_2', 'Tamaño de la operación: empleados, sucursales, depósitos'],
+      ['t_3', 'Sistemas actuales a reemplazar o integrar'],
+      ['t_4', '¿Cuál es el proceso más urgente/crítico a digitalizar primero?'],
+      ['t_5', 'Usuarios y roles por área'],
+      ['t_6', 'Requisitos legales e impositivos locales a contemplar'],
+      ['t_7', 'Reportes gerenciales que necesitan'],
+      ['t_8', '¿Es una sola empresa o maneja múltiples razones sociales/sucursales?'],
+      ['t_9', 'Integraciones externas necesarias'],
+      ['t_10', '¿Migran datos de un sistema anterior? ¿En qué formato?'],
+    ]},
+  };
+
+  function questionGroupHtml(section, items, respuestas) {
+    const fields = items.map(([key, label]) => `
+      <div class="field">
+        <label>${esc(label)}</label>
+        <textarea name="${key}" rows="2">${esc(respuestas[key] || '')}</textarea>
+      </div>`).join('');
+    return `<div class="relevamiento-section"><h4>${esc(section)}</h4>${fields}</div>`;
+  }
+
+  function renderRelevamientoQuestions(tipo, respuestas) {
+    const container = document.getElementById('relevamiento-preguntas');
+    if (!tipo) { container.innerHTML = ''; return; }
+    let html = RELEVAMIENTO_BASE.map(g => questionGroupHtml(g.section, g.items, respuestas)).join('');
+    const tipoGroup = RELEVAMIENTO_TIPOS[tipo];
+    if (tipoGroup) html += questionGroupHtml(tipoGroup.section, tipoGroup.items, respuestas);
+    container.innerHTML = html;
+  }
+
+  const relevamientoBackdrop = document.getElementById('modal-relevamiento');
+  const relevamientoForm = document.getElementById('form-relevamiento');
+  const relevamientoProyectoSelect = document.getElementById('relevamiento-proyecto');
+  const relevamientoTipoSelect = document.getElementById('relevamiento-tipo');
+
+  function openRelevamientoModal(record) {
+    relevamientoForm.reset();
+    relevamientoForm.querySelector('[name=id]').value = record ? record.id : '';
+    relevamientoProyectoSelect.innerHTML = proyectosCache.map(p => `<option value="${p.id}">${esc(p.nombre)}</option>`).join('');
+    if (record) relevamientoProyectoSelect.value = record.proyecto_id;
+    relevamientoTipoSelect.value = record ? record.tipo_proyecto : '';
+    renderRelevamientoQuestions(record ? record.tipo_proyecto : '', record ? (record.respuestas || {}) : {});
+    document.getElementById('relevamiento-modal-title').textContent = record ? 'Editar relevamiento' : 'Nuevo relevamiento';
+    relevamientoBackdrop.classList.add('active');
+  }
+
+  document.getElementById('btn-nuevo-relevamiento').addEventListener('click', () => {
+    if (!proyectosCache.length) { alert('Primero cargá al menos un proyecto.'); return; }
+    openRelevamientoModal(null);
+  });
+
+  relevamientoTipoSelect.addEventListener('change', () => {
+    renderRelevamientoQuestions(relevamientoTipoSelect.value, {});
+  });
+
+  relevamientoForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = relevamientoForm.querySelector('[name=id]').value;
+    const proyecto_id = relevamientoProyectoSelect.value;
+    const tipo_proyecto = relevamientoTipoSelect.value;
+    if (!proyecto_id || !tipo_proyecto) { alert('Elegí un proyecto y un tipo de proyecto.'); return; }
+
+    const respuestas = {};
+    relevamientoForm.querySelectorAll('#relevamiento-preguntas textarea').forEach(t => {
+      respuestas[t.name] = t.value;
+    });
+
+    const payload = { proyecto_id, tipo_proyecto, respuestas, updated_at: new Date().toISOString() };
+    let error;
+    if (id) {
+      ({ error } = await sb.from('relevamientos').update(payload).eq('id', id));
+    } else {
+      ({ error } = await sb.from('relevamientos').insert(payload));
+    }
+    if (error) { alert('Error al guardar: ' + error.message); return; }
+    relevamientoBackdrop.classList.remove('active');
+    loadAll();
+  });
 
   checkSession();
 
