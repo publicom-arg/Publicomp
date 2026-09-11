@@ -721,7 +721,7 @@
       <p>Sin precios fijos en la web porque el trabajo es a medida — pero contános el contexto y te respondemos con algo concreto, no una lista de precios genérica.</p>
     </div>
     <div class="contact-grid reveal pre">
-      <form onsubmit="event.preventDefault(); this.querySelector('.submit-btn').textContent='Enviado ✓';">
+      <form id="contact-form">
         <div class="row-2">
           <div class="field">
             <label for="f-nombre">Nombre</label>
@@ -766,6 +766,7 @@
           <textarea id="f-desc" placeholder="¿Qué tenés hoy y qué te falta?"></textarea>
         </div>
         <button class="btn-primary submit-btn" type="submit" style="border:none;">Enviar consulta</button>
+        <div id="contact-error" style="display:none;color:#ff6b6b;font-size:13px;margin-top:4px;"></div>
       </form>
 
       <aside class="contact-side">
@@ -842,4 +843,44 @@
     });
   }, {threshold:.15});
   revealEls.forEach(el=>io.observe(el));
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+  const sbContact = supabase.createClient(
+    'https://zlpcpcnbwbppouihqkmh.supabase.co',
+    'sb_publishable_t_rvwi8m53TvZZd5FR72Sw_FhSF4KWB'
+  );
+
+  const contactForm = document.getElementById('contact-form');
+  contactForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submitBtn = contactForm.querySelector('.submit-btn');
+    const errorBox = document.getElementById('contact-error');
+    errorBox.style.display = 'none';
+    submitBtn.textContent = 'Enviando...';
+
+    const notas = [
+      'Capa de interés: ' + document.getElementById('f-capa').value,
+      'Plazo estimado: ' + document.getElementById('f-plazo').value,
+      'Presupuesto: ' + document.getElementById('f-presupuesto').value,
+      'Descripción: ' + (document.getElementById('f-desc').value || '—')
+    ].join('\n');
+
+    const { error } = await sbContact.from('oportunidades').insert({
+      nombre_contacto: document.getElementById('f-nombre').value,
+      email: document.getElementById('f-email').value,
+      notas: notas,
+      estado: 'nuevo'
+    });
+
+    if (error) {
+      submitBtn.textContent = 'Enviar consulta';
+      errorBox.textContent = 'No pudimos enviar tu consulta. Probá de nuevo o escribinos por WhatsApp.';
+      errorBox.style.display = 'block';
+      return;
+    }
+    submitBtn.textContent = 'Enviado ✓';
+    contactForm.reset();
+  });
 </script>
