@@ -118,8 +118,35 @@
   }
   nav.side-nav a:hover{color:var(--white);background:rgba(255,255,255,.03);}
   nav.side-nav a.active{color:var(--red);border-left-color:var(--red);background:rgba(229,9,20,.06);}
-  .side-foot{position:absolute;bottom:0;width:220px;padding:16px 20px;border-top:1px solid var(--line);}
-  .side-foot button{width:100%;}
+
+  /* ---------- USER MENU ---------- */
+  #user-menu{display:none;position:fixed;top:14px;right:16px;z-index:70;}
+  #user-avatar{
+    width:38px;height:38px;border-radius:50%;
+    background:var(--carbon);border:1px solid var(--line);color:var(--white);
+    font-family:var(--font-mono);font-weight:600;font-size:14px;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;transition:border-color .15s;
+  }
+  #user-avatar:hover{border-color:var(--red);}
+  #user-dropdown{
+    display:none;position:absolute;top:46px;right:0;min-width:200px;
+    background:var(--graphite);border:1px solid var(--line);
+    box-shadow:0 14px 28px -12px rgba(0,0,0,.6);
+  }
+  #user-dropdown.open{display:block;}
+  #user-dropdown .user-email{
+    padding:12px 14px;border-bottom:1px solid var(--line);
+    font-family:var(--font-mono);font-size:11.5px;color:var(--silver);
+    word-break:break-all;
+  }
+  #user-dropdown button{
+    width:100%;background:none;border:none;color:var(--white);
+    font-family:var(--font-mono);font-size:12px;font-weight:600;
+    letter-spacing:.06em;text-transform:uppercase;text-align:left;
+    padding:12px 14px;cursor:pointer;transition:background .15s,color .15s;
+  }
+  #user-dropdown button:hover{background:rgba(229,9,20,.1);color:var(--red);}
 
   main{padding:32px 40px;max-width:1100px;}
   .view-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:24px;flex-wrap:wrap;}
@@ -182,7 +209,6 @@
   @media (max-width:760px){
     #app.active{grid-template-columns:1fr;}
     aside{position:static;height:auto;width:100%;}
-    .side-foot{position:static;width:100%;margin-top:8px;}
     main{padding:20px 16px;max-width:100%;overflow-x:hidden;}
     .tiles{grid-template-columns:1fr 1fr;}
     .view-head{flex-direction:column;align-items:flex-start;gap:10px;}
@@ -240,6 +266,15 @@
   </div>
 </div>
 
+<!-- USER MENU -->
+<div id="user-menu">
+  <button id="user-avatar" aria-label="Cuenta"></button>
+  <div id="user-dropdown">
+    <div class="user-email" id="user-email"></div>
+    <button id="logout-btn">Cerrar sesión</button>
+  </div>
+</div>
+
 <!-- APP -->
 <div id="app">
   <aside>
@@ -256,9 +291,6 @@
         <li><a href="#oportunidades" data-view="oportunidades">Oportunidades</a></li>
       </ul>
     </nav>
-    <div class="side-foot">
-      <button class="btn btn-sm" id="logout-btn">Cerrar sesión</button>
-    </div>
   </aside>
 
   <main>
@@ -466,7 +498,7 @@
     loginError.style.display = 'none';
     const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value;
-    const { error } = await sb.auth.signInWithPassword({ email, password });
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
     if (error) {
       loginError.textContent = error.message === 'Invalid login credentials'
         ? 'Email o contraseña incorrectos.'
@@ -474,7 +506,7 @@
       loginError.style.display = 'block';
       return;
     }
-    showApp();
+    showApp(data.session);
   });
 
   document.getElementById('logout-btn').addEventListener('click', async () => {
@@ -482,19 +514,35 @@
     location.reload();
   });
 
+  const userMenu = document.getElementById('user-menu');
+  const userAvatar = document.getElementById('user-avatar');
+  const userDropdown = document.getElementById('user-dropdown');
+  userAvatar.addEventListener('click', (e) => {
+    e.stopPropagation();
+    userDropdown.classList.toggle('open');
+  });
+  document.addEventListener('click', (e) => {
+    if (!userMenu.contains(e.target)) userDropdown.classList.remove('open');
+  });
+
   async function checkSession() {
     const { data: { session } } = await sb.auth.getSession();
-    if (session) showApp(); else showLogin();
+    if (session) showApp(session); else showLogin();
   }
 
   function showLogin() {
     loginScreen.style.display = 'flex';
     app.classList.remove('active');
+    userMenu.style.display = 'none';
   }
 
-  function showApp() {
+  function showApp(session) {
     loginScreen.style.display = 'none';
     app.classList.add('active');
+    userMenu.style.display = 'block';
+    const email = session?.user?.email || '';
+    userAvatar.textContent = email ? email[0].toUpperCase() : '?';
+    document.getElementById('user-email').textContent = email;
     loadAll();
   }
 
