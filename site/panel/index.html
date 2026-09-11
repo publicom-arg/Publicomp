@@ -348,7 +348,7 @@
         <button class="btn btn-primary" data-open-modal="oportunidades">+ Nueva oportunidad</button>
       </div>
       <div class="table-wrap"><table>
-        <thead><tr><th>Contacto</th><th>Empresa</th><th>Capa de interés</th><th>Plazo</th><th>Presupuesto</th><th>Descripción</th><th>Estado</th><th></th></tr></thead>
+        <thead><tr><th>Contacto</th><th>Email</th><th>Teléfono</th><th>Empresa</th><th>Capa de interés</th><th>Plazo</th><th>Presupuesto</th><th>Descripción</th><th>Estado</th><th></th></tr></thead>
         <tbody id="oportunidades-tbody"></tbody>
       </table></div>
     </section>
@@ -750,6 +750,8 @@
       ? oportunidades.map(o => `
         <tr>
           <td data-label="Contacto">${esc(o.nombre_contacto)}</td>
+          <td data-label="Email">${esc(o.email) || '—'}</td>
+          <td data-label="Teléfono">${esc(o.telefono) || '—'}</td>
           <td data-label="Empresa">${esc(o.empresa) || '—'}</td>
           <td data-label="Capa de interés">${esc(o.capa_interes) || '—'}</td>
           <td data-label="Plazo">${esc(o.plazo_estimado) || '—'}</td>
@@ -761,7 +763,7 @@
             <button class="btn btn-sm btn-danger" onclick="deleteRecord('oportunidades','${o.id}','${esc(o.nombre_contacto)}')">Eliminar</button>
           </td>
         </tr>`).join('')
-      : `<tr><td colspan="8" class="empty-state">Todavía no cargaste ninguna oportunidad.</td></tr>`;
+      : `<tr><td colspan="10" class="empty-state">Todavía no cargaste ninguna oportunidad.</td></tr>`;
   }
 
   checkSession();

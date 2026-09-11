@@ -742,6 +742,10 @@
         </div>
         <div class="row-2">
           <div class="field">
+            <label for="f-telefono">WhatsApp / Teléfono (opcional)</label>
+            <input id="f-telefono" type="tel" placeholder="Ej. 2284306203">
+          </div>
+          <div class="field">
             <label for="f-capa">Capa de interés</label>
             <select id="f-capa">
               <option>Marca — identidad y diseño</option>
@@ -750,6 +754,8 @@
               <option>No estoy seguro todavía</option>
             </select>
           </div>
+        </div>
+        <div class="row-2">
           <div class="field">
             <label for="f-plazo">Plazo estimado</label>
             <select id="f-plazo">
@@ -759,15 +765,15 @@
               <option>Sin apuro, estoy explorando</option>
             </select>
           </div>
-        </div>
-        <div class="field">
-          <label for="f-presupuesto">Rango de presupuesto</label>
-          <select id="f-presupuesto">
-            <option>Acotado</option>
-            <option>Moderado</option>
-            <option>Robusto</option>
-            <option>Prefiero conversarlo en la consulta</option>
-          </select>
+          <div class="field">
+            <label for="f-presupuesto">Rango de presupuesto</label>
+            <select id="f-presupuesto">
+              <option>Acotado</option>
+              <option>Moderado</option>
+              <option>Robusto</option>
+              <option>Prefiero conversarlo en la consulta</option>
+            </select>
+          </div>
         </div>
         <div class="field">
           <label for="f-desc">Contanos brevemente tu proyecto</label>
@@ -871,6 +877,7 @@
     const { error } = await sbContact.from('oportunidades').insert({
       nombre_contacto: document.getElementById('f-nombre').value,
       email: document.getElementById('f-email').value,
+      telefono: document.getElementById('f-telefono').value || null,
       capa_interes: document.getElementById('f-capa').value,
       plazo_estimado: document.getElementById('f-plazo').value,
       presupuesto: document.getElementById('f-presupuesto').value,
