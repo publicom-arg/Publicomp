@@ -10,21 +10,39 @@ Estudio digital (Juan Pablo Brito, fundador — no mostrar el nombre en el sitio
 ## Estado del proyecto
 
 - ✅ **Identidad de marca** — resuelta (Brand Kit del cliente, no del territorio visual original).
-- ✅ **Sitio web** (`site/index.html`) — landing de una página: hero con el isotipo en 3D + íconos de stack tecnológico orbitando, arquitectura de servicios en 3 capas, proceso, trayectoria, portafolio (2 casos reales), soporte técnico, contacto con formulario de calificación, botón flotante de WhatsApp.
+- ✅ **Sitio web** (`site/index.html`) — landing de una página: hero con el isotipo en 3D + íconos de stack tecnológico orbitando, arquitectura de servicios en 3 capas, proceso, trayectoria, portafolio (2 casos reales), soporte técnico (íconos chanflados rojo/cromado), contacto con formulario de calificación conectado a Supabase (ver abajo), botón flotante de WhatsApp.
 - ✅ **Botón de WhatsApp** — flotante, en el sitio.
-- ⏳ **Pendiente, próxima fase**: sistema de gestión interno — clientes, ventas, servicios. Plataforma dual (vista interna del dueño + vista cliente) según lo define el brief en "8. La aplicación". No arrancar sin definir primero: alcance mínimo viable, modelo de datos, y si el hosting/backend ya está decidido. No asumir stack — preguntar.
+- ✅ **Sistema de gestión interno — MVP vista interna** (`site/panel/`) — panel instalable como PWA (manifest + service worker, ícono en pantalla de inicio) con:
+  - Login de un solo usuario (Supabase Auth), menú de perfil arriba a la derecha para cerrar sesión.
+  - Dashboard con métricas (proyectos activos, clientes, cobros pendientes, oportunidades abiertas).
+  - CRUD de Clientes, Proyectos, Facturación (registro/seguimiento, sin cobros integrados), Oportunidades.
+  - El formulario de contacto del sitio público inserta directamente en `oportunidades` (política RLS de solo-inserción para el rol `anon`).
+  - **Relevamientos**: módulo de levantamiento de requerimientos — elegís un proyecto y un tipo (landing, institucional, e-commerce, POS, CRM, ERP) y carga automáticamente el cuestionario correspondiente (ver `docs/relevamiento-proyectos.md`), guardado como JSON asociado a ese proyecto.
+  - Tablas en mobile se ven como tarjetas apiladas (no scroll horizontal).
+- ⏳ **Pendiente, próxima fase**: vista cliente (según brief "8. La aplicación") — recorte filtrado de la misma base para que cada cliente vea su propio proyecto. Esperar a validar el modelo actual con uso real antes de arrancar.
+
+## Infraestructura y despliegue
+
+Todo corre en cuentas dedicadas a Publicomp (no mezcladas con cuentas personales del dueño):
+
+- **GitHub**: `publicom-arg/Publicomp` (repo público — necesario porque Vercel Hobby no permite colaboración en repos privados).
+- **Vercel**: team "Publicomp". Deploy automático en cada `git push` a `main`. URL de producción: `https://publicomp-hazel.vercel.app` (el dominio corto `publicomp.vercel.app` quedó apuntando a un deploy viejo, no usarlo). Root directory del proyecto: `site`.
+- **Supabase**: proyecto "publicomp" (organización `bucefalo1507`), región `ca-central-1`. Todas las tablas con RLS activo, acceso general restringido a `authenticated`.
+- **Dominio propio**: todavía no registrado — pendiente, se conecta a Vercel cuando se compre.
+- Regla de trabajo acordada con el cliente: no pushear cambios visuales/funcionales a producción sin mostrarlos y tener confirmación explícita primero.
 
 ## Estructura de carpetas
 
 ```
 Publicomp/
 ├── CLAUDE.md                  este archivo
-├── docs/                      estrategia — brief y territorio visual (histórico)
+├── docs/                      estrategia — brief, territorio visual (histórico), relevamiento de proyectos
 ├── brand/                     Brand Kit oficial — PDF, logo, tarjetas, favicon/íconos
 │   └── icons/                 kit de íconos fuente (favicon, apple-touch, android-chrome...)
-└── site/                      el sitio web
+└── site/                      el sitio web + panel interno
     ├── index.html             producción — usa rutas relativas a assets/, sin nada embebido
-    ├── assets/                imágenes e íconos que usa index.html
+    ├── assets/                imágenes e íconos que usa index.html y el panel
+    ├── panel/                 sistema de gestión interno (PWA) — index.html, manifest.webmanifest, sw.js
     └── artifact-preview.html  build alternativo con la imagen del isotipo embebida en base64,
                                 SOLO para publicar como Artifact de Claude (que no puede cargar
                                 archivos locales por rutas relativas). No es el archivo real del sitio.
