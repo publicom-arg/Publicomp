@@ -3,3 +3,4 @@ site/.b64tmp/
 .DS_Store
 Thumbs.db
 desktop.ini
+.tmp_fonts/
