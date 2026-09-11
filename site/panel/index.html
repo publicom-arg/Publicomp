@@ -186,6 +186,30 @@
     main{padding:20px 16px;max-width:100%;overflow-x:hidden;}
     .tiles{grid-template-columns:1fr 1fr;}
     .view-head{flex-direction:column;align-items:flex-start;gap:10px;}
+
+    /* tables become stacked cards, no horizontal scroll needed */
+    .table-wrap{overflow-x:visible;border:none;}
+    table{min-width:0;}
+    thead{display:none;}
+    tbody tr{
+      display:block;background:var(--graphite);border:1px solid var(--line);
+      margin-bottom:10px;padding:4px 0;
+    }
+    tbody tr:last-child{margin-bottom:0;}
+    tbody td{
+      display:flex;justify-content:space-between;align-items:flex-start;gap:14px;
+      border-bottom:1px solid var(--carbon);padding:10px 14px;text-align:right;
+    }
+    tbody tr td:last-child{border-bottom:none;}
+    tbody td::before{
+      content:attr(data-label);
+      font-family:var(--font-mono);font-size:10px;font-weight:600;
+      letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
+      text-align:left;flex:0 0 auto;padding-top:2px;
+    }
+    tbody td.row-actions{justify-content:flex-end;}
+    tbody td.row-actions::before{content:none;}
+    tbody td.truncate{max-width:none;white-space:normal;overflow:visible;text-overflow:clip;text-align:right;}
   }
   @media (max-width:420px){
     .tiles{grid-template-columns:1fr;}
@@ -616,10 +640,10 @@
     document.getElementById('dashboard-vencimientos').innerHTML = vencimientos.length
       ? vencimientos.map(f => `
         <tr>
-          <td>${esc(f.proyectos?.nombre || '—')}</td>
-          <td>${fmtMoney(f.monto, f.moneda)}</td>
-          <td>${fmtDate(f.fecha)}</td>
-          <td><span class="pill ${pillClass(f.estado)}">${f.estado}</span></td>
+          <td data-label="Proyecto">${esc(f.proyectos?.nombre || '—')}</td>
+          <td data-label="Monto">${fmtMoney(f.monto, f.moneda)}</td>
+          <td data-label="Fecha">${fmtDate(f.fecha)}</td>
+          <td data-label="Estado"><span class="pill ${pillClass(f.estado)}">${f.estado}</span></td>
         </tr>`).join('')
       : `<tr><td colspan="4" class="empty-state">Sin cobros pendientes registrados.</td></tr>`;
   }
@@ -628,10 +652,10 @@
     document.getElementById('clientes-tbody').innerHTML = clientes.length
       ? clientes.map(c => `
         <tr>
-          <td>${esc(c.nombre)}</td>
-          <td>${esc(c.empresa) || '—'}</td>
-          <td>${esc(c.email) || '—'}</td>
-          <td>${esc(c.telefono) || '—'}</td>
+          <td data-label="Nombre">${esc(c.nombre)}</td>
+          <td data-label="Empresa">${esc(c.empresa) || '—'}</td>
+          <td data-label="Email">${esc(c.email) || '—'}</td>
+          <td data-label="Teléfono">${esc(c.telefono) || '—'}</td>
           <td class="row-actions">
             <button class="btn btn-sm" onclick='openModal("clientes", ${JSON.stringify(c).replace(/'/g,"&#39;")})'>Editar</button>
             <button class="btn btn-sm btn-danger" onclick="deleteRecord('clientes','${c.id}','${esc(c.nombre)}')">Eliminar</button>
@@ -644,11 +668,11 @@
     document.getElementById('proyectos-tbody').innerHTML = proyectos.length
       ? proyectos.map(p => `
         <tr>
-          <td>${esc(p.nombre)}</td>
-          <td>${esc(p.clientes?.nombre) || '—'}</td>
-          <td>Capa ${p.capa_servicio}</td>
-          <td>${esc(p.etapa_actual) || '—'}</td>
-          <td><span class="pill ${pillClass(p.estado)}">${p.estado}</span></td>
+          <td data-label="Proyecto">${esc(p.nombre)}</td>
+          <td data-label="Cliente">${esc(p.clientes?.nombre) || '—'}</td>
+          <td data-label="Capa">Capa ${p.capa_servicio}</td>
+          <td data-label="Etapa actual">${esc(p.etapa_actual) || '—'}</td>
+          <td data-label="Estado"><span class="pill ${pillClass(p.estado)}">${p.estado}</span></td>
           <td class="row-actions">
             <button class="btn btn-sm" onclick='openModal("proyectos", ${JSON.stringify({...p, cliente_id:p.cliente_id}).replace(/'/g,"&#39;")})'>Editar</button>
             <button class="btn btn-sm btn-danger" onclick="deleteRecord('proyectos','${p.id}','${esc(p.nombre)}')">Eliminar</button>
@@ -661,10 +685,10 @@
     document.getElementById('facturacion-tbody').innerHTML = facturacion.length
       ? facturacion.map(f => `
         <tr>
-          <td>${esc(f.proyectos?.nombre) || '—'}</td>
-          <td>${fmtMoney(f.monto, f.moneda)}</td>
-          <td>${fmtDate(f.fecha)}</td>
-          <td><span class="pill ${pillClass(f.estado)}">${f.estado}</span></td>
+          <td data-label="Proyecto">${esc(f.proyectos?.nombre) || '—'}</td>
+          <td data-label="Monto">${fmtMoney(f.monto, f.moneda)}</td>
+          <td data-label="Fecha">${fmtDate(f.fecha)}</td>
+          <td data-label="Estado"><span class="pill ${pillClass(f.estado)}">${f.estado}</span></td>
           <td class="row-actions">
             <button class="btn btn-sm" onclick='openModal("facturacion", ${JSON.stringify({...f, proyecto_id:f.proyecto_id}).replace(/'/g,"&#39;")})'>Editar</button>
             <button class="btn btn-sm btn-danger" onclick="deleteRecord('facturacion','${f.id}','registro de facturación')">Eliminar</button>
@@ -677,13 +701,13 @@
     document.getElementById('oportunidades-tbody').innerHTML = oportunidades.length
       ? oportunidades.map(o => `
         <tr>
-          <td>${esc(o.nombre_contacto)}</td>
-          <td>${esc(o.empresa) || '—'}</td>
-          <td>${esc(o.capa_interes) || '—'}</td>
-          <td>${esc(o.plazo_estimado) || '—'}</td>
-          <td>${esc(o.presupuesto) || '—'}</td>
-          <td class="truncate" title="${esc(o.descripcion)}">${esc(o.descripcion) || '—'}</td>
-          <td><span class="pill ${pillClass(o.estado)}">${o.estado}</span></td>
+          <td data-label="Contacto">${esc(o.nombre_contacto)}</td>
+          <td data-label="Empresa">${esc(o.empresa) || '—'}</td>
+          <td data-label="Capa de interés">${esc(o.capa_interes) || '—'}</td>
+          <td data-label="Plazo">${esc(o.plazo_estimado) || '—'}</td>
+          <td data-label="Presupuesto">${esc(o.presupuesto) || '—'}</td>
+          <td class="truncate" data-label="Descripción" title="${esc(o.descripcion)}">${esc(o.descripcion) || '—'}</td>
+          <td data-label="Estado"><span class="pill ${pillClass(o.estado)}">${o.estado}</span></td>
           <td class="row-actions">
             <button class="btn btn-sm" onclick='openModal("oportunidades", ${JSON.stringify(o).replace(/'/g,"&#39;")})'>Editar</button>
             <button class="btn btn-sm btn-danger" onclick="deleteRecord('oportunidades','${o.id}','${esc(o.nombre_contacto)}')">Eliminar</button>
