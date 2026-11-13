@@ -26,9 +26,10 @@ Estudio digital (Juan Pablo Brito, fundador — no mostrar el nombre en el sitio
 Todo corre en cuentas dedicadas a Publicomp (no mezcladas con cuentas personales del dueño):
 
 - **GitHub**: `publicom-arg/Publicomp` (repo público — necesario porque Vercel Hobby no permite colaboración en repos privados).
-- **Vercel**: team "Publicomp". Deploy automático en cada `git push` a `main`. URL de producción: `https://publicomp-hazel.vercel.app` (el dominio corto `publicomp.vercel.app` quedó apuntando a un deploy viejo, no usarlo). Root directory del proyecto: `site`.
-- **Supabase**: proyecto "publicomp" (organización `bucefalo1507`), región `ca-central-1`. Todas las tablas con RLS activo, acceso general restringido a `authenticated`.
-- **Dominio propio**: todavía no registrado — pendiente, se conecta a Vercel cuando se compre.
+- **Vercel**: team "Publicomp". Deploy automático en cada `git push` a `main`. Dirección pública: `https://www.publicom.com.ar` (la raíz `publicom.com.ar` redirige con 308 a `www`). URL técnica de respaldo: `https://publicomp-hazel.vercel.app` (el dominio corto `publicomp.vercel.app` quedó apuntando a un deploy viejo, no usarlo). Root directory del proyecto: `site`.
+- **Supabase**: proyecto "publicomp" (id `zlpcpcnbwbppouihqkmh`, organización "Publicomp"), región `ca-central-1`. Todas las tablas con RLS activo, acceso general restringido a `authenticated`.
+- **Dominios** (registrados en DonWeb, vencen el 12/11/2027): `publicom.com.ar` (principal) y `publicom.site` (respaldo, redirige al principal). OJO: se escriben **publicom**, sin la "p" final de la marca Publicomp. Los nameservers siguen siendo los de DonWeb; en su zona DNS hay un registro A `@` → `216.198.79.1` y un CNAME `www` → valor que muestra Vercel en Settings → Domains. Hay que renovarlos antes del vencimiento.
+- El QR de la tarjeta de presentación (`brand/tarjeta-dorso-qr-web.png`) apunta a `https://www.publicom.com.ar`. Si cambia el dominio principal, hay que regenerarlo.
 - Regla de trabajo acordada con el cliente: no pushear cambios visuales/funcionales a producción sin mostrarlos y tener confirmación explícita primero.
 
 ## Estructura de carpetas
@@ -56,7 +57,7 @@ Publicomp/
 - Tipografía del sitio: Montserrat (display) + IBM Plex Sans (cuerpo) + JetBrains Mono (datos/labels técnicos).
 - Tagline oficial: "Publicidad y Diseño Computarizado" (firma histórica, elevada a tagline — decisión del cliente que revierte la recomendación original del brief; ver nota en `docs/brief-estrategico-publicomp.md`).
 - Descriptor comercial: "Diseñamos, construimos y automatizamos" (mapea a las 3 capas de servicio).
-- **No inventar** casos de estudio, testimonios, métricas de resultado, ni datos de contacto (email, dominio) que no estén confirmados — el dominio todavía no está registrado.
+- **No inventar** casos de estudio, testimonios, métricas de resultado, ni datos de contacto (email, teléfono) que no estén confirmados. El dominio `publicom.com.ar` ya está registrado, pero todavía no hay casilla de correo con ese dominio: no mostrar un email inventado.
 - **No mostrar el nombre del fundador** en el sitio público (decisión explícita, 2026-09-10).
 
 ## Portafolio (casos reales en el sitio)
